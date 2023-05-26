@@ -4,6 +4,7 @@ from kivy.metrics import dp
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.image import Image
 
 from kivy.config import Config
 from kivy.core.window import Window
@@ -13,6 +14,7 @@ from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.label import MDIcon
 
 from datetime import datetime
 
@@ -178,13 +180,11 @@ class MyBox(BoxLayout):
         self.spacing = 30
         self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
 
-        self.add_widget(Label(
-            text="Project Organizer",
-            font_size=dp(32),
+        self.add_widget(Image(
+            source='icons/icon.png',
             pos_hint={"center_x": 0.5},
             size_hint=(None, None),
-            size=(200, 50),
-            color="#2e2c2f"
+            size=(400, 200)
         ))
 
         self.pickedItem = ItemInfo()
@@ -238,6 +238,7 @@ class BasicApp(MDApp):
     def build(self):
         box = MyBox()
         self.theme_cls.theme_style = "Light"
+        self.icon = 'icons/icon2.png'
         return box
 
 
@@ -248,5 +249,5 @@ if __name__ == "__main__":
     global project_data
     project_data = get_data()
 
-    Window.size = (800, 700)
+    Window.size = (800, 800)
     BasicApp().run()
