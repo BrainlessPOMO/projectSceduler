@@ -1,0 +1,62 @@
+<ItemInfo@GridLayout>:
+  cols : 4
+  size_hint_y : None
+  height : 60
+  spacing : 10, 0
+  
+  MDLabel:
+    text: 'Item Id'
+    bold: True
+
+  MDLabel:
+    text: 'Item Name'
+    bold: True
+  
+  MDLabel:
+    text: 'Until Date'
+    bold: True
+  
+  MDLabel:
+    text: 'Item Progress'
+    bold: True
+
+  MDTextField:
+    id: wid_tf
+    multiline: False
+    readonly: True
+  
+  MDTextField:
+    id: name_tf
+    multiline: False
+  
+  MDTextField:
+    id: days_tf
+    multiline: False
+    readonly: True
+    on_double_tap: root.show_date_dialog()
+  
+  MDTextField:
+    id: progress_tf
+    multiline: False
+
+
+<TheButtons@BoxLayout>:
+  orientation : 'horizontal'
+  size_hint_y : None
+  height : 60
+  spacing : 120
+  
+  MDRectangleFlatButton:
+    text: "Add Project"
+    font_size: '18dp'
+    on_press: root.add()
+
+  MDRectangleFlatButton:
+    text: "Update Project"
+    font_size: '18dp'
+    on_press: root.update()
+
+  MDRectangleFlatButton:
+    text: "Delete Project"
+    font_size: '18dp'
+    on_press: root.delete()
