@@ -154,3 +154,5 @@ cython_debug/
 projectOrganizer.py
 projects.db
 tkinter_test.py
+azure.tcl
+old_db
