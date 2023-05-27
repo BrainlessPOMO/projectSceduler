@@ -239,6 +239,7 @@ class BasicApp(MDApp):
         box = MyBox()
         self.theme_cls.theme_style = "Light"
         self.icon = 'icons/icon2.png'
+        self.title = "Project Sceduler"
         return box
 
 
