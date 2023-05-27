@@ -1,10 +1,8 @@
 from kivy.lang import Builder
 from kivy.metrics import dp
 
-from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
 
 from kivy.config import Config
 from kivy.core.window import Window
@@ -14,13 +12,11 @@ from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
-from kivymd.uix.label import MDIcon
 
 from datetime import datetime
 
 from os.path import exists
 from dbSetup import get_data, update_item, add_item, delete_item, create_tables
-import time
 
 Builder.load_file('styles.kv')
 Config.set('graphics', 'resizable', True)
@@ -102,7 +98,7 @@ class TheButtons(BoxLayout):
 
         add_item(new_name, new_date, new_progress)
         update_data()
-        self.parent.updateTable()
+        self.parent.update_table()
 
     def close_alert(self, obj):
         self.dialog.dismiss()
@@ -141,7 +137,7 @@ class TheButtons(BoxLayout):
 
         update_item(old_id, new_name, new_date, new_progress)
         update_data()
-        self.parent.updateTable()
+        self.parent.update_table()
 
     def delete(self):
         old_id = self.parent.pickedItem.ids.wid_tf.text
@@ -169,7 +165,7 @@ class TheButtons(BoxLayout):
 
         delete_item(old_id)
         update_data()
-        self.parent.updateTable()
+        self.parent.update_table()
 
     def clear(self):
         self.parent.pickedItem.ids.wid_tf.text = ''
@@ -189,11 +185,10 @@ class MainBox(BoxLayout):
             size_hint=(0.9, 0.6),
             column_data=[
                 ("ID", dp(10)),
-                ("Project Name", dp(60)),
-                ("Days Left", dp(20)),
+                ("Project Name", dp(60), self.sort_on_name),
+                ("Days Left", dp(20), self.sort_on_days_left),
                 ("Progress", dp(20))
             ],
-            sorted_on="Days Left",
             use_pagination=True,
             row_data=convert_data()
         )
@@ -203,7 +198,15 @@ class MainBox(BoxLayout):
         self.buttons = TheButtons()
         self.add_widget(self.buttons)
 
-    def updateTable(self):
+    # sorting functions
+    def sort_on_name(self, data):
+        return zip(*sorted(enumerate(data), key=lambda l: l[1][1]))
+
+    def sort_on_days_left(self, data):
+        return zip(*sorted(enumerate(data), key=lambda l: l[1][2]))
+
+    # button functions
+    def update_table(self):
         update_data()
         self.table.update_row_data(self.table, convert_data())
 
@@ -216,11 +219,10 @@ class MainBox(BoxLayout):
     def on_row_press(self, instance_table, instance_row):
         table_range = instance_row.table.recycle_data[instance_row.index]["range"]
         pass_values = []
-        for index in range(table_range[0], table_range[1]+1):
+        for index in range(table_range[0], table_range[1] + 1):
             pass_values.append(instance_row.table.recycle_data[index]["text"])
 
-        pass_values = (
-            [item for item in project_data if item[0] == int(pass_values[0])])
+        pass_values = ([item for item in project_data if item[0] == int(pass_values[0])])
 
         self.pickedItem.ids.wid_tf.text = str(pass_values[0][0])
         self.pickedItem.ids.name_tf.text = str(pass_values[0][1])
@@ -228,12 +230,12 @@ class MainBox(BoxLayout):
         self.pickedItem.ids.progress_tf.text = str(pass_values[0][3])
 
 
-class ProjectSceduler(MDApp):
+class ProjectScheduler(MDApp):
     def build(self):
         box = MainBox()
         self.theme_cls.theme_style = "Light"
         self.icon = 'icons/icon2.png'
-        self.title = "Project Sceduler"
+        self.title = "Project Scheduler"
         return box
 
 
@@ -245,4 +247,4 @@ if __name__ == "__main__":
     project_data = get_data()
 
     Window.size = (800, 800)
-    ProjectSceduler().run()
+    ProjectScheduler().run()
