@@ -156,3 +156,6 @@ projects.db
 tkinter_test.py
 azure.tcl
 old_db
+
+# all test files
+test.*
