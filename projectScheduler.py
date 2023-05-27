@@ -11,14 +11,14 @@ from kivymd.app import MDApp
 from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton
 from kivymd.uix.button import MDFloatingActionButtonSpeedDial
 from kivymd.icon_definitions import md_icons
 
 from datetime import datetime
 
 from os.path import exists
-from dbSetup import get_data, update_item, add_item, delete_item, create_tables
+from dbSetup import get_data, update_item, add_item, delete_item, first_setup, repair_database
 
 Builder.load_file('styles.kv')
 Config.set('graphics', 'resizable', True)
@@ -99,7 +99,6 @@ class TheButtons(BoxLayout):
         self.parent.pickedItem.ids.progress_tf.text = ''
 
         add_item(new_name, new_date, new_progress)
-        update_data()
         self.parent.update_table()
 
     def close_alert(self, obj):
@@ -138,7 +137,6 @@ class TheButtons(BoxLayout):
         self.parent.pickedItem.ids.progress_tf.text = ''
 
         update_item(old_id, new_name, new_date, new_progress)
-        update_data()
         self.parent.update_table()
 
     def delete(self):
@@ -166,7 +164,6 @@ class TheButtons(BoxLayout):
         self.parent.pickedItem.ids.progress_tf.text = ''
 
         delete_item(old_id)
-        update_data()
         self.parent.update_table()
 
     def clear(self):
@@ -177,6 +174,8 @@ class TheButtons(BoxLayout):
 
 
 class MainBox(BoxLayout):
+    dialog = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -214,7 +213,29 @@ class MainBox(BoxLayout):
     # dial menu functionality
     def callback(self, instance):
         # TODO: repair database functionality
-        print("in callback")
+
+        if not self.dialog:
+            self.dialog = MDDialog(
+                title="Are you sure?",
+                text="This operation will delete all data from the database!",
+                buttons=[
+                    MDFlatButton(text="CANCEL", on_release=self.close_alert),
+                    MDRectangleFlatButton(
+                        text="YES", on_release=self.repair_db)
+                ]
+            )
+
+        self.dialog.open()
+
+    # alert functionality
+    def repair_db(self, obj):
+        repair_database()
+        self.update_table()
+        self.close_alert("")
+
+    def close_alert(self, obj):
+        self.dialog.dismiss()
+        self.dialog = None
 
     # sorting functions
     def sort_on_name(self, data):
@@ -260,7 +281,7 @@ class ProjectScheduler(MDApp):
 
 if __name__ == "__main__":
     if not exists("projects.db"):
-        create_tables()
+        first_setup()
 
     global project_data
     project_data = get_data()

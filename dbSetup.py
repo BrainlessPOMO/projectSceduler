@@ -37,9 +37,7 @@ def create_tables():
 
 def delete_tables():
     query = """DROP TABLE project"""
-
     cursor.execute(query)
-
     conn.commit()
 
 
@@ -108,9 +106,17 @@ def get_data():
     return rows
 
 
+def repair_database():
+    create_connection()
+    delete_tables()
+    create_tables()
+    close_connection()
+
+
 def first_setup():
     create_connection()
     create_tables()
+    close_connection()
 
 
 if __name__ == "__main__":
