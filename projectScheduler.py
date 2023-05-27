@@ -12,6 +12,8 @@ from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.button import MDFloatingActionButtonSpeedDial
+from kivymd.icon_definitions import md_icons
 
 from datetime import datetime
 
@@ -177,12 +179,13 @@ class TheButtons(BoxLayout):
 class MainBox(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
         self.pickedItem = ItemInfo()
         self.add_widget(self.pickedItem)
 
         self.table = MDDataTable(
             pos_hint={'center_x': 0.5, 'center_y': 0.5},
-            size_hint=(0.9, 0.6),
+            size_hint=(0.8, 0.8),
             column_data=[
                 ("ID", dp(10)),
                 ("Project Name", dp(60), self.sort_on_name),
@@ -197,6 +200,21 @@ class MainBox(BoxLayout):
 
         self.buttons = TheButtons()
         self.add_widget(self.buttons)
+
+        self.speed_dial = MDFloatingActionButtonSpeedDial(
+            id="speed_dial",
+            data={'Repair Database': [
+                'car-wrench', "on_release", self.callback]},
+            root_button_anim=True,
+            size_hint=(None, None),
+            size=(0, 0)
+        )
+        self.add_widget(self.speed_dial)
+
+    # dial menu functionality
+    def callback(self, instance):
+        # TODO: repair database functionality
+        print("in callback")
 
     # sorting functions
     def sort_on_name(self, data):
@@ -222,7 +240,8 @@ class MainBox(BoxLayout):
         for index in range(table_range[0], table_range[1] + 1):
             pass_values.append(instance_row.table.recycle_data[index]["text"])
 
-        pass_values = ([item for item in project_data if item[0] == int(pass_values[0])])
+        pass_values = (
+            [item for item in project_data if item[0] == int(pass_values[0])])
 
         self.pickedItem.ids.wid_tf.text = str(pass_values[0][0])
         self.pickedItem.ids.name_tf.text = str(pass_values[0][1])
@@ -246,5 +265,5 @@ if __name__ == "__main__":
     global project_data
     project_data = get_data()
 
-    Window.size = (800, 800)
+    Window.size = (850, 800)
     ProjectScheduler().run()
