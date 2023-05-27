@@ -44,7 +44,7 @@
   orientation : 'horizontal'
   size_hint_y : None
   height : 60
-  spacing : 120
+  spacing : 30
   
   MDRectangleFlatButton:
     text: "Add Project"
@@ -60,3 +60,20 @@
     text: "Delete Project"
     font_size: '18dp'
     on_press: root.delete()
+
+  MDRectangleFlatButton:
+    text: "Clear Text Fields"
+    font_size: '18dp'
+    on_press: root.clear()
+
+<MainBox@BoxLayout>
+  orientation: 'vertical'
+  padding: (70, 30)
+  spacing: 30
+  pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+  Image:
+    source: 'icons/icon.png'
+    pos_hint: {"center_x": 0.5}
+    size_hint: (None, None)
+    size: (400, 200)

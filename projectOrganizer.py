@@ -171,22 +171,16 @@ class TheButtons(BoxLayout):
         update_data()
         self.parent.updateTable()
 
+    def clear(self):
+        self.parent.pickedItem.ids.wid_tf.text = ''
+        self.parent.pickedItem.ids.name_tf.text = ''
+        self.parent.pickedItem.ids.days_tf.text = ''
+        self.parent.pickedItem.ids.progress_tf.text = ''
 
-class MyBox(BoxLayout):
+
+class MainBox(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
-        self.padding = (70, 30)
-        self.spacing = 30
-        self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
-
-        self.add_widget(Image(
-            source='icons/icon.png',
-            pos_hint={"center_x": 0.5},
-            size_hint=(None, None),
-            size=(400, 200)
-        ))
-
         self.pickedItem = ItemInfo()
         self.add_widget(self.pickedItem)
 
@@ -234,9 +228,9 @@ class MyBox(BoxLayout):
         self.pickedItem.ids.progress_tf.text = str(pass_values[0][3])
 
 
-class BasicApp(MDApp):
+class ProjectSceduler(MDApp):
     def build(self):
-        box = MyBox()
+        box = MainBox()
         self.theme_cls.theme_style = "Light"
         self.icon = 'icons/icon2.png'
         self.title = "Project Sceduler"
@@ -251,4 +245,4 @@ if __name__ == "__main__":
     project_data = get_data()
 
     Window.size = (800, 800)
-    BasicApp().run()
+    ProjectSceduler().run()
