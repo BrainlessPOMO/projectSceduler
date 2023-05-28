@@ -11,17 +11,29 @@ from kivymd.app import MDApp
 from kivymd.uix.datatables import MDDataTable
 from kivymd.uix.pickers import MDDatePicker
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton
-from kivymd.uix.button import MDFloatingActionButtonSpeedDial
-from kivymd.icon_definitions import md_icons
+from kivymd.uix.menu.menu import MDDropdownMenu
+from kivymd.uix.bottomnavigation import MDBottomNavigation, MDBottomNavigationItem
+from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton
 
 from datetime import datetime
 
 from os.path import exists
-from dbSetup import get_data, update_item, add_item, delete_item, first_setup, repair_database
+from os import remove, rename, listdir
+
+from shutil import copy2
+
+from dbSetup import get_data, update_item, add_item, delete_item, first_setup, repair_database, backup_database
 
 Builder.load_file('styles.kv')
 Config.set('graphics', 'resizable', True)
+
+backups = listdir("backups")
+
+
+def update_backups():
+    global backups
+    backups = listdir("backups")
 
 
 def convert_data():
@@ -62,9 +74,19 @@ class ItemInfo(GridLayout):
         date_dialog.open()
 
 
-class TheButtons(BoxLayout):
-    dialog = None
+class BottomBar(Snackbar):
+    def __init__(self, message, **kwargs):
+        super().__init__(**kwargs)
+        Snackbar(
+            text=message,
+            snackbar_x=0.5,
+            snackbar_y="10dp",
+            size_hint_x=.5,
+            # pos_hint_x=.5,
+        ).open()
 
+
+class TheButtons(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         pass
@@ -77,20 +99,14 @@ class TheButtons(BoxLayout):
         try:
             int(new_progress)
             if not new_name:
-                raise ValueError('empty string')
+                raise Exception('Name must not be empty')
             if not new_date:
-                raise ValueError('empty date')
+                raise Exception('Date must not be empty')
         except ValueError as e:
-            if not self.dialog:
-                self.dialog = MDDialog(
-                    title="Operation Failed",
-                    text="Progress must be an integer\nName and date must not be empty",
-                    buttons=[MDFlatButton(
-                        text="OK", on_release=self.close_alert)
-                    ]
-                )
-
-            self.dialog.open()
+            BottomBar("Progress must be an integer")
+            return
+        except Exception as e:
+            BottomBar(str(e))
             return
 
         self.parent.pickedItem.ids.wid_tf.text = ''
@@ -100,10 +116,6 @@ class TheButtons(BoxLayout):
 
         add_item(new_name, new_date, new_progress)
         self.parent.update_table()
-
-    def close_alert(self, obj):
-        self.dialog.dismiss()
-        self.dialog = None
 
     def update(self):
         old_id = self.parent.pickedItem.ids.wid_tf.text
@@ -119,16 +131,7 @@ class TheButtons(BoxLayout):
             if not new_name:
                 raise ValueError('empty name')
         except ValueError as e:
-            if not self.dialog:
-                self.dialog = MDDialog(
-                    title="Operation Failed",
-                    text="Please pick a project from the list to edit",
-                    buttons=[MDFlatButton(
-                        text="OK", on_release=self.close_alert)
-                    ]
-                )
-
-            self.dialog.open()
+            BottomBar("Please pick a project from the list to edit")
             return
 
         self.parent.pickedItem.ids.wid_tf.text = ''
@@ -146,16 +149,7 @@ class TheButtons(BoxLayout):
             if not old_id:
                 raise ValueError('empty date')
         except ValueError as e:
-            if not self.dialog:
-                self.dialog = MDDialog(
-                    title="Operation Failed",
-                    text="Please pick a project from the list to delete",
-                    buttons=[MDFlatButton(
-                        text="OK", on_release=self.close_alert)
-                    ]
-                )
-
-            self.dialog.open()
+            BottomBar("Please pick a project from the list to delete")
             return
 
         self.parent.pickedItem.ids.wid_tf.text = ''
@@ -188,7 +182,7 @@ class MainBox(BoxLayout):
             column_data=[
                 ("ID", dp(10)),
                 ("Project Name", dp(60), self.sort_on_name),
-                ("Days Left", dp(20), self.sort_on_days_left),
+                ("Days Left", dp(30), self.sort_on_days_left),
                 ("Progress", dp(20))
             ],
             use_pagination=True,
@@ -200,42 +194,17 @@ class MainBox(BoxLayout):
         self.buttons = TheButtons()
         self.add_widget(self.buttons)
 
-        self.speed_dial = MDFloatingActionButtonSpeedDial(
-            id="speed_dial",
-            data={'Repair Database': [
-                'car-wrench', "on_release", self.callback]},
-            root_button_anim=True,
-            size_hint=(None, None),
-            size=(0, 0)
-        )
-        self.add_widget(self.speed_dial)
+    def restore(self, instance):
+        global backups
+        backups = listdir("backups")
+        if len(backups) != 0:
+            self.parent.parent.current = "restore"
+            return
 
-    # dial menu functionality
-    def callback(self, instance):
-        # TODO: repair database functionality
+        BottomBar("You have not backup your database at any point!")
 
-        if not self.dialog:
-            self.dialog = MDDialog(
-                title="Are you sure?",
-                text="This operation will delete all data from the database!",
-                buttons=[
-                    MDFlatButton(text="CANCEL", on_release=self.close_alert),
-                    MDRectangleFlatButton(
-                        text="YES", on_release=self.repair_db)
-                ]
-            )
-
-        self.dialog.open()
-
-    # alert functionality
-    def repair_db(self, obj):
-        repair_database()
-        self.update_table()
-        self.close_alert("")
-
-    def close_alert(self, obj):
-        self.dialog.dismiss()
-        self.dialog = None
+    def backup(self, instance):
+        print("Backing up")
 
     # sorting functions
     def sort_on_name(self, data):
@@ -270,13 +239,122 @@ class MainBox(BoxLayout):
         self.pickedItem.ids.progress_tf.text = str(pass_values[0][3])
 
 
+class MainScreen(MDBottomNavigationItem):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.box = MainBox()
+        self.add_widget(self.box)
+
+
+class RestoreBox(BoxLayout):
+    dialog = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.id = "restore"
+        self.orientation = 'vertical'
+        self.padding = (70, 30)
+        self.spacing = 30
+        self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
+
+    def create_backup(self):
+        temp_datetime = datetime.now()
+        temp_datetime = f"{temp_datetime.day}-{temp_datetime.month}-{temp_datetime.year}_{temp_datetime.hour}{temp_datetime.minute}{temp_datetime.second}"
+
+        backup_database(f"backups/backup_{temp_datetime}.db")
+        BottomBar("Backup file successfully created")
+        return
+
+    def create_dropdown_menu(self):
+        self.menu_list = list()
+        backup_file_list = listdir("backups")
+
+        for backup in backup_file_list:
+            self.menu_list.append({
+                "viewclass": "OneLineListItem",
+                "on_release": lambda x=str(backup): self.on_dropdown_release(x),
+                "text": str(backup),
+            })
+
+        self.menu = MDDropdownMenu(
+            caller=self.ids.file_name,
+            items=self.menu_list,
+            width_mult=4.5,
+            max_height=dp(200)
+        )
+        self.menu.open()
+
+    def on_dropdown_release(self, backupName):
+        self.ids.file_name.text = backupName
+        self.menu.dismiss()
+
+    def restore_db(self):
+        if self.ids.file_name.text:
+            copy2(f'backups/{self.ids.file_name.text}', '.')
+            remove('projects.db')
+            rename(self.ids.file_name.text, 'projects.db')
+            self.ids.file_name.text = ''
+            BottomBar("Database successfully restored")
+
+            # update table
+            self.parent.parent.parent.first_widget.children[0].update_table()
+            return
+        BottomBar("You have to pick a backup file from the dropdown")
+
+    def repair_db(self):
+        if not self.dialog:
+            self.dialog = MDDialog(
+                title="Are you sure?",
+                text="This operation will delete all data from the database!",
+                buttons=[
+                    MDFlatButton(
+                        text="CANCEL",
+                        on_release=self.close_alert
+                    ),
+                    MDRectangleFlatButton(
+                        text="YES",
+                        on_release=self.repair
+                    )
+                ]
+            )
+
+        self.dialog.open()
+
+    # alert functionality
+    def repair(self, instance):
+        repair_database()
+        self.parent.parent.parent.first_widget.children[0].update_table()
+        self.close_alert("")
+
+    def close_alert(self, obj):
+        self.dialog.dismiss()
+        self.dialog = None
+
+
+class RestoreScreen(MDBottomNavigationItem):
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.restore_box = RestoreBox()
+        self.add_widget(self.restore_box)
+
+
 class ProjectScheduler(MDApp):
     def build(self):
-        box = MainBox()
         self.theme_cls.theme_style = "Light"
         self.icon = 'icons/icon2.png'
         self.title = "Project Scheduler"
-        return box
+
+        bottom_nav = MDBottomNavigation()
+        bottom_nav.add_widget(MainScreen(
+            name="main",
+            icon='projector-screen-outline'
+        ))
+        bottom_nav.add_widget(RestoreScreen(
+            name="restore",
+            icon='restore'
+        ))
+
+        return bottom_nav
 
 
 if __name__ == "__main__":
@@ -286,5 +364,5 @@ if __name__ == "__main__":
     global project_data
     project_data = get_data()
 
-    Window.size = (850, 800)
+    Window.size = (950, 800)
     ProjectScheduler().run()

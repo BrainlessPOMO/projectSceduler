@@ -5,11 +5,11 @@
   spacing : 10, 0
   
   MDLabel:
-    text: 'Item Id'
+    text: 'ID'
     bold: True
 
   MDLabel:
-    text: 'Item Name'
+    text: 'Name'
     bold: True
   
   MDLabel:
@@ -17,7 +17,7 @@
     bold: True
   
   MDLabel:
-    text: 'Item Progress'
+    text: 'Progress'
     bold: True
 
   MDTextField:
@@ -40,28 +40,28 @@
     multiline: False
 
 
-<TheButtons@BoxLayout>:
-  orientation : 'horizontal'
+<TheButtons@GridLayout>:
+  cols : 4
   size_hint_y : None
   height : 60
-  spacing : 30
+  spacing : 10, 0
   
-  MDRectangleFlatButton:
+  Button:
     text: "Add Project"
     font_size: '18dp'
     on_press: root.add()
 
-  MDRectangleFlatButton:
+  Button:
     text: "Update Project"
     font_size: '18dp'
     on_press: root.update()
 
-  MDRectangleFlatButton:
+  Button:
     text: "Delete Project"
     font_size: '18dp'
     on_press: root.delete()
 
-  MDRectangleFlatButton:
+  Button:
     text: "Clear Text Fields"
     font_size: '18dp'
     on_press: root.clear()
@@ -76,4 +76,48 @@
     source: 'icons/icon.png'
     pos_hint: {"center_x": 0.5}
     size_hint: (None, None)
-    size: (300, 200)
+    keep_ratio: True
+    size: (250, 125)
+
+<RestoreBox@BoxLayout>:
+  GridLayout:
+    cols: 1
+
+    MDTextField:
+      id: file_name
+      hint_text: "Pick a backup file"
+      multiline: False
+      readonly: True
+      size_hint_x: 0.3
+      size_hint_y: None
+      height: 80
+      on_double_tap:root.create_dropdown_menu()
+
+    MDRoundFlatIconButton:
+      id: restore_btn
+      icon: 'backup-restore'
+      text: "Restore Database"
+      on_release: root.restore_db()
+      size_hint_x: 0.3
+      size_hint_y: None
+      height: 50
+  
+  MDRoundFlatIconButton:
+    id: make_backup_btn
+    icon: 'folder-plus'
+    text: "Create a backup"
+    on_release: root.create_backup()
+    size_hint_x: 0.3
+    size_hint_y: None
+    height: 80
+    pos_hint: {"center_x": 0.5}
+
+  MDRoundFlatIconButton:
+    id: repair_btn
+    icon: 'car-wrench'
+    text: "Repair Database"
+    on_release: root.repair_db()
+    size_hint_x: 0.3
+    size_hint_y: None
+    height: 80
+    pos_hint: {"center_x": 0.5}

@@ -119,11 +119,21 @@ def first_setup():
     close_connection()
 
 
+def backup_database(target_db_path):
+    create_connection()
+
+    target_db = sqlite3.connect(target_db_path)
+    conn.backup(target_db)
+    close_connection()
+
+
 if __name__ == "__main__":
-    create_tables()
 
-    rows = get_data()
+    backup_database("backups/backup.db")
+    # create_tables()
 
-    for row in rows:
-        print(
-            f"id: {row[0]}\nclass_name: {row[1]}\nuntil_date: {row[2]}\nprogress: {row[3]}\n")
+    # rows = get_data()
+
+    # for row in rows:
+    #     print(
+    #         f"id: {row[0]}\nclass_name: {row[1]}\nuntil_date: {row[2]}\nprogress: {row[3]}\n")

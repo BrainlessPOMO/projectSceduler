@@ -159,3 +159,7 @@ old_db
 
 # all test files
 test.*
+
+# all backup files
+backups
+backup*
