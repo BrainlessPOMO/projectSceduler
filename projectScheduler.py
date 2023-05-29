@@ -19,7 +19,7 @@ from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton
 from datetime import datetime
 
 from os.path import exists
-from os import remove, rename, listdir
+from os import remove, rename, listdir, makedirs
 
 from shutil import copy2
 
@@ -27,6 +27,9 @@ from dbSetup import get_data, update_item, add_item, delete_item, first_setup, r
 
 Builder.load_file('styles.kv')
 Config.set('graphics', 'resizable', True)
+
+if not exists("backups"):
+    makedirs("backups")
 
 backups = listdir("backups")
 
@@ -274,6 +277,12 @@ class RestoreBox(BoxLayout):
                 "viewclass": "OneLineListItem",
                 "on_release": lambda x=str(backup): self.on_dropdown_release(x),
                 "text": str(backup),
+            })
+
+        if len(self.menu_list) == 0:
+            self.menu_list.append({
+                "viewclass": "OneLineListItem",
+                "text": "You have no Backups"
             })
 
         self.menu = MDDropdownMenu(
